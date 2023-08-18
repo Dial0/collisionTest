@@ -98,6 +98,8 @@ closestPointOnTri closestPointTriangle(Vector3 origin, Vector3 p1, Vector3 p2, V
     if (baryPoint.x >= 0 && baryPoint.y >= 0 && baryPoint.x + baryPoint.y <= 1) {
         closestPoint = OriginintersectionPoint;
         result.collisionType = SURFACE;
+        result.edgePoint1 = p1;
+        result.edgePoint2 = p1;
     }
     else {
         // Find nearest point on triangle edges
@@ -123,11 +125,14 @@ closestPointOnTri closestPointTriangle(Vector3 origin, Vector3 p1, Vector3 p2, V
 
         if(closestOnEdge){
             result.collisionType = EDGE;
+            result.edgePoint1 = edgePoints[closestEdgeIdx];
+            result.edgePoint2 = edgePoints[(closestEdgeIdx + 1) % 3];
+
         }else{
             result.collisionType = POINT;
+            result.edgePoint1 = closestPoint;
+            result.edgePoint2 = closestPoint;
         }
-        
-
     }
 
     result.closestPoint = closestPoint;
