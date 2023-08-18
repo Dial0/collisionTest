@@ -28,12 +28,120 @@
 //------------------------------------------------------------------------------------
 // Program main entry point
 //------------------------------------------------------------------------------------
+
+typedef enum {
+    NONE = 0, SURFACE, EDGE, POINT
+} colType;
+
+typedef struct {
+    Vector3 tri[3];
+    Vector3 closestPoint;
+    Vector3 backstepStart;
+    Vector3 BackstepEnd;
+
+    Vector3 newSpherePos;
+
+} triColEvent;
+
 void DrawArrow(Vector3 start, Vector3 end, float size, Color color) {
     Vector3 dir = Vector3Normalize(Vector3Subtract(end,start));
     float length = Vector3Distance(start,end);
     Vector3 arrowStart = Vector3Add(start,Vector3Scale(dir, length*0.8f));
     DrawCylinderEx(arrowStart, end,size*2,0.00f,10,color);
     DrawCylinderEx(start, arrowStart,size,size,10,color);
+}
+
+inline Vector3 nearestPointOnLine(Vector3 l1, Vector3 l2, Vector3 p, bool* edge) {
+    Vector3 lineDirection = Vector3Normalize(Vector3Subtract(l2, l1));
+    Vector3 pointDirection = Vector3Subtract(p, l1);
+
+    *edge = false;
+
+    float distance = Vector3Distance(l1, l2);
+    //float distance = Vector3DotProduct(pointDirection, lineDirection);
+    float t = Vector3DotProduct(pointDirection, lineDirection);
+    if (t < 0.0f) {
+        return l1;
+    }
+    if (t > distance) {
+        return l2;
+    }
+     *edge = true;
+    return Vector3Add(l1, Vector3Scale(lineDirection, t));
+}
+
+typedef struct {
+    colType collisionType;
+    Vector3 closestPoint
+    Vector3 edgePoint1;
+    Vector3 edgePoint2;
+}closestPointOnTri;
+
+closestPointOnTri closestPointTriangle(Vector3 origin, Vector3 p1, Vector3 p2, Vector3 p3, Vector3* out_closestPoint) {
+
+    closestPointOnTri result;
+
+    result.collisionType = NONE;
+
+    Vector3 planeNormal = getTriangleNormal(p1, p2, p3);
+    Vector3 inverseNormal = Vector3Subtract((struct Vector3) { 0.0f, 0.0f, 0.0f }, planeNormal);
+
+    Vector3 OriginintersectionPoint;
+    Ray OriginintersectionRay = { origin ,Vector3Normalize(inverseNormal) };
+    bool Originhit = rayPlaneCollision(OriginintersectionRay, p1, p2, p3, &OriginintersectionPoint);
+    float OrigindistToPlane = Vector3Distance(origin, OriginintersectionPoint);
+
+    Vector3 closestPoint;
+    Vector3 baryPoint = Vector3Barycenter(OriginintersectionPoint, p1, p2, p3);
+
+    //if point inside triangle
+    if (baryPoint.x >= 0 && baryPoint.y >= 0 && baryPoint.x + baryPoint.y <= 1) {
+        closestPoint = OriginintersectionPoint;
+        result.collisionType = SURFACE;
+    }
+    else {
+        // Find nearest point on triangle edges
+        closestPoint = p1;
+        float closestDist = Vector3Distance(OriginintersectionPoint, closestPoint);
+        bool closestOnEdge = false;
+        int closestEdgeIdx = 0;
+
+        Vector3 edgePoints[3] = { p1, p2, p3 };
+        for (int i = 0; i < 3; i++) {
+            Vector3 e1 = edgePoints[i];
+            Vector3 e2 = edgePoints[(i + 1) % 3];
+            bool onEdge;
+            Vector3 ep = nearestPointOnLine(e1, e2, OriginintersectionPoint,&onEdge);
+            float dist = Vector3Distance(OriginintersectionPoint, ep);
+            if (dist < closestDist) {
+                closestEdgeIdx = i;
+                closestOnEdge = onEdge;
+                closestDist = dist;
+                closestPoint = ep;
+            }
+        }
+
+        if(closestOnEdge){
+            result.collisionType = EDGE;
+        }else{
+            result.collisionType = POINT;
+        }
+        
+
+    }
+
+    result.closestPoint = closestPoint;
+
+}
+
+
+
+triColEvent sphereTriCol(Vector3 Tri[3], Vector3 spherePos, Vector3 sphereDir, float moveDist) {
+
+
+
+
+    return;
 }
 
 
@@ -61,6 +169,7 @@ int main(void)
         //----------------------------------------------------------------------------------
         // TODO: Update your variables here
         //----------------------------------------------------------------------------------
+
 
         // Draw
         //----------------------------------------------------------------------------------
