@@ -30,10 +30,11 @@
 //------------------------------------------------------------------------------------
 
 typedef enum {
-    NONE = 0, SURFACE, EDGE, POINT
+    NONE = 0, SURFACE, EDGE, POINT, INVALID;
 } colType;
 
 typedef struct {
+    colType type;
     Vector3 tri[3];
     Vector3 closestPoint;
     Vector3 backstepStart;
@@ -51,7 +52,18 @@ void DrawArrow(Vector3 start, Vector3 end, float size, Color color) {
     DrawCylinderEx(start, arrowStart,size,size,10,color);
 }
 
-inline Vector3 nearestPointOnLine(Vector3 l1, Vector3 l2, Vector3 p, bool* edge) {
+Vector3 getTriangleNormal(Vector3 v1, Vector3 v2, Vector3 v3) {
+    Vector3 edge1 = { v2.x - v1.x, v2.y - v1.y, v2.z - v1.z };
+    Vector3 edge2 = { v3.x - v1.x, v3.y - v1.y, v3.z - v1.z };
+    Vector3 normal = Vector3CrossProduct(edge1, edge2);
+    float length = sqrtf(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
+    normal.x /= length;
+    normal.y /= length;
+    normal.z /= length;
+    return normal;
+}
+
+Vector3 nearestPointOnLine(Vector3 l1, Vector3 l2, Vector3 p, bool* edge) {
     Vector3 lineDirection = Vector3Normalize(Vector3Subtract(l2, l1));
     Vector3 pointDirection = Vector3Subtract(p, l1);
 
@@ -77,7 +89,7 @@ typedef struct {
     Vector3 edgePoint2;
 }closestPointOnTri;
 
-closestPointOnTri closestPointTriangle(Vector3 origin, Vector3 p1, Vector3 p2, Vector3 p3, Vector3* out_closestPoint) {
+closestPointOnTri closestPointTriangle(Vector3 origin, Vector3 p1, Vector3 p2, Vector3 p3) {
 
     closestPointOnTri result;
 
@@ -136,17 +148,27 @@ closestPointOnTri closestPointTriangle(Vector3 origin, Vector3 p1, Vector3 p2, V
     }
 
     result.closestPoint = closestPoint;
-
 }
 
 
 
 triColEvent sphereTriCol(Vector3 Tri[3], Vector3 spherePos, Vector3 sphereDir, float moveDist) {
 
+    triColEvent result;
 
+    closestPointOnTri closestPoint = closestPointTriangle(spherePos,Tri[0],Tri[1],Tri[2]);
 
+    if(Vector3Distance(spherePos,closestPoint) > 1.0f) {
+        result.type = NONE;
+        return result;
+    }
 
-    return;
+    if(closestPointOnTri.type == POINT) {
+        
+    }
+
+    result.type = INVALID;
+    return result;
 }
 
 
