@@ -291,9 +291,26 @@ int main(void)
     //EDGE HARD
     Vector3 ColTri[3] = { { -0.681478f, -0.158351f, 0.287404f },{ 0.254617f, 0.976186f, 2.51794f },{ 0.859759f, 0.335812f, 1.83313f } };
 
+    Model model = LoadModel("cylinder_ani.m3d");
+    Model testSphere = LoadModel("sphere.m3d");
+    Model testcyl = LoadModel("cylinder_test.m3d");
+    unsigned int animsCount = 0;
+    ModelAnimation *anims = LoadModelAnimations("cylinder_ani.m3d", &animsCount);
+    int animFrameCounter = 0;
+    if (animsCount <= 0 ){
+        return 0 ;
+    }
+
+    int filesize = 0;
+    unsigned char * filedata = LoadFileData("cylinder.m3d", &filesize);
+
+    SaveFileText("test.txt", "test message");
 
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
+
+
+
 
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
@@ -304,6 +321,9 @@ int main(void)
         //----------------------------------------------------------------------------------
         triColEvent Col = sphereTriCol(ColTri, (struct Vector3) { 0.0f, 0.0f, 0.0f }, (struct Vector3) { 0.0f, 0.0f, 1.0f }, 1.0f);
         
+        animFrameCounter++;
+        UpdateModelAnimation(model, anims[0], animFrameCounter);
+        if (animFrameCounter >= anims[0].frameCount) animFrameCounter = 0;
 
         // Draw
         //----------------------------------------------------------------------------------
@@ -311,10 +331,21 @@ int main(void)
         
         BeginDrawing();
 
-            ClearBackground(RAYWHITE);
+            ClearBackground(LIGHTGRAY);
             BeginMode3D(camera);
 
                 DrawGrid(10, 1.0f);
+
+                DrawModel(model, (struct Vector3) { 0.0f, 0.0f, 0.0f }, 1.0f, BLUE);
+                Mesh cubeMesh = GenMeshCube(0.2f, 0.2f, 0.2f);
+                //Matrix cubeMeshMat = MatrixMultiply(QuaternionToMatrix(anims[0].framePoses[animFrameCounter][1].rotation),MatrixTranslate(0.0f, 0.5f, 0.0f) );
+                Matrix cubeMeshMat = MatrixTranslate(anims[0].framePoses[animFrameCounter][1].translation.x,anims[0].framePoses[animFrameCounter][1].translation.y,anims[0].framePoses[animFrameCounter][1].translation.z);
+                cubeMeshMat = MatrixMultiply(QuaternionToMatrix(anims[0].framePoses[animFrameCounter][1].rotation),cubeMeshMat );
+                cubeMeshMat = MatrixMultiply(MatrixTranslate(0.0f, 1.4619f, 0.0f), cubeMeshMat);
+                DrawMesh(testSphere.meshes[0], LoadMaterialDefault(), cubeMeshMat);
+                
+
+                Col.type = NONE;
 
                 if (Col.type == POINT) {
                     rlEnableDepthTest();
