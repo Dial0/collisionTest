@@ -234,7 +234,8 @@ triColEvent sphereTriCol(Vector3* Tri, Vector3 spherePos, Vector3 sphereDir, flo
         RayCollision shellIntersection = GetRayCollisionSphere(pointShell, spherePos, 1.0f);
         result.shellPoint = shellIntersection.point;
         Vector3 negativeSphereDir = Vector3Subtract((struct Vector3) { 0.0f, 0.0f, 0.0f }, sphereDir);
-        
+        Vector3 backstep = Vector3Scale(negativeSphereDir, shellIntersection.distance);
+        result.newSpherePos = Vector3Add(spherePos, backstep);
 
         result.colPlaneTangent = edgeTangent;
 
@@ -258,9 +259,6 @@ triColEvent sphereTriCol(Vector3* Tri, Vector3 spherePos, Vector3 sphereDir, flo
         Ray newPointShell = { ep, sphereDir };
         RayCollision newShellIntersection = GetRayCollisionSphere(newPointShell, spherePos, 1.0f);
 
-        Vector3 backstep = Vector3Scale(negativeSphereDir, newShellIntersection.distance);
-        result.newSpherePos = Vector3Add(spherePos, backstep);
-
         result.newEdgePoint = ep;
         result.newShellPoint = newShellIntersection.point;
 
@@ -283,7 +281,7 @@ triColEvent sphereTriCol(Vector3* Tri, Vector3 spherePos, Vector3 sphereDir, flo
         Vector3 colPlaneIntersectionPoint = { shellcol.point.x + colPlaneIntTime * negativeSphereDir.x,
                         shellcol.point.y + colPlaneIntTime * negativeSphereDir.y,
                         shellcol.point.z + colPlaneIntTime * negativeSphereDir.z };
-        result.colPlaneIntPoint = colPlaneIntersectionPoint;
+
         
         closestPointOnTri newClosestPoint; 
         newClosestPoint = closestPointTriangle(colPlaneIntersectionPoint, p1, p2, p3);
@@ -291,10 +289,7 @@ triColEvent sphereTriCol(Vector3* Tri, Vector3 spherePos, Vector3 sphereDir, flo
         Ray newPointShell = { newClosestPoint.pos, sphereDir };
         RayCollision newShellIntersection = GetRayCollisionSphere(newPointShell, spherePos, 1.0f);
 
-        Vector3 backstep = Vector3Scale(negativeSphereDir, newShellIntersection.distance);
-        result.newSpherePos = Vector3Add(spherePos, backstep);
-
-        result.newEdgePoint = newClosestPoint.pos;
+        //result.newClosestPoint = newPointShell;
         result.newShellPoint = newShellIntersection.point;
         return result;
     }
@@ -325,11 +320,7 @@ int main(void)
     //Vector3 ColTri[3] = { { -0.091649f, 1.29442f, 0.310159f },{ 0.497118f, 0.976186f, 1.65942f },{ 0.497118f, -0.579771f, 0.897624f } };
 
     //EDGE HARD
-    //Vector3 ColTri[3] = { { -0.681478f, -0.158351f, 0.287404f },{ 0.254617f, 0.976186f, 2.51794f },{ 0.859759f, 0.335812f, 1.83313f } };
-
-    //SURFACE
-    Vector3 ColTri[3] = { {-1.28507f, -0.79453f, 0.077321f },{ 0.150548f, 1.56482f, 1.04062f },{ 1.11105f, -0.236494f, 1.14242f } };
-
+    Vector3 ColTri[3] = { { -0.681478f, -0.158351f, 0.287404f },{ 0.254617f, 0.976186f, 2.51794f },{ 0.859759f, 0.335812f, 1.83313f } };
 
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
@@ -411,20 +402,6 @@ int main(void)
                 }
                 if (Col.type == SURFACE){
                     rlEnableDepthTest();
-                    DrawArrow((struct Vector3) { 0.0f, 0.0f, 0.0f }, (struct Vector3) { 0.0f, 0.0f, 1.0f }, 0.01f, GREEN);
-                    DrawTriangle3D(ColTri[0], ColTri[1], ColTri[2], GRAY);
-                    //collision plane intersection
-                    DrawArrow((struct Vector3) { 0.0f, 0.0f, 0.0f }, Col.colPlaneShell, 0.01f, ORANGE);
-                    DrawArrow(Col.colPlaneShell, Col.colPlaneIntPoint, 0.01f, ORANGE);
-                    
-                    DrawSphere(Col.newEdgePoint, 0.01f, PINK);
-                    DrawArrow(Col.newEdgePoint, Col.newShellPoint, 0.01f, PURPLE);
-
-                    rlDrawRenderBatchActive();
-                    rlDisableDepthTest();
-
-                    DrawSphere(Col.newSpherePos, 1.0f, newSphereColor);
-                    DrawSphere((struct Vector3) { 0.0f, 0.0f, 0.0f }, 1.0f, mainSphereColor);
                 }
 
             
