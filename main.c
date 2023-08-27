@@ -50,6 +50,9 @@ typedef struct {
     Vector3 newEdgePoint;
     Vector3 newShellPoint;
 
+    //surface
+    
+
 } triColEvent;
 
 void DrawArrow(Vector3 start, Vector3 end, float size, Color color) {
